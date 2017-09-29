@@ -1,0 +1,25 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+#include <memory>
+#include <gplot/decl.hpp>
+{% endblock %}
+{% block body %}
+class GPlot
+{
+	public:
+		GPlot();
+		~GPlot();
+		void		refresh();
+		template<typename... Args> void	print(Args... args)
+		{
+			fprintf(_M_fp, args...);
+		}
+		
+		unsigned int	_M_flags;
+		FILE *		_M_fp;
+		std::vector<std::shared_ptr<gplot::plot::Plot>>	_M_plots;
+};
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <memory>
+#include <boost/signals2.hpp>
+#include <gplot/decl.hpp>
+{% endblock %}
+{% block body %}
+class DataStream
+{
+	public:
+		void			refresh();
+
+		std::weak_ptr<gplot::datafile::DataFile>	_M_datafile;
+		unsigned int					_M_column;
+	
+		typedef boost::signals2::signal<void()> SIG;
+
+		SIG						_M_sig;
+};
+{% endblock %}

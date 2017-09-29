@@ -1,0 +1,38 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <memory>
+#include <boost/signals2.hpp>
+#include <gplot/decl.hpp>
+{% endblock %}
+{% block body %}
+class Plot:
+	virtual public std::enable_shared_from_this<Plot>
+{
+	public:
+		typedef boost::signals2::signal<void()> SIG;
+
+		Plot();
+		void						plot(
+				gplot::GPlot & gp);
+		/**
+		 * This function is connected to the refresh signal of the x and y datastreams.
+		 * This functions will check that the lengths of both datastreams are the same.
+		 * this check is necessary because the x and y datastream signals will be called
+		 * one after the other.
+		 * Then it will trigger its refresh signal to which the GPlot object will
+		 * be connect.
+		 */
+		void						refresh();
+		void						connect(
+				std::shared_ptr<gplot::datafile::DataFile>,
+				unsigned int,
+				unsigned int
+				);
+
+		SIG						_M_sig;
+		std::shared_ptr<gplot::datafile::DataFile>	_M_file;
+		unsigned int					_M_col_x;
+		unsigned int					_M_col_y;
+		std::string					_M_linetype;
+};
+{% endblock %}

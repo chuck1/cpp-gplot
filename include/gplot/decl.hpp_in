@@ -1,0 +1,22 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+{% endblock %}
+{% block body %}
+class GPlot;
+namespace plot
+{
+	class Plot;
+}
+namespace dstream
+{
+	class DataStream;
+}
+namespace datafile
+{
+	class DataFile;
+}
+namespace vector
+{
+	template<typename> class Vector;
+}
+{% endblock %}

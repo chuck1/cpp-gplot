@@ -1,0 +1,25 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <vector>
+#include <boost/signals2.hpp>
+{% endblock %}
+{% block body %}
+template<typename T>
+class Vector
+{
+	public:
+		typedef boost::signals2::signal<void(T const &)> SIG;
+
+		void		push_back(T const & t)
+		{
+			v.push_back(t);
+			
+			_M_sig(t);
+		}
+
+		SIG		_M_sig;
+
+	private:
+		std::vector<T>	v;
+};
+{% endblock %}

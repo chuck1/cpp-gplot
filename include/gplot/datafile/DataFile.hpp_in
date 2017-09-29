@@ -1,0 +1,31 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <boost/signals2.hpp>
+#include <eigen3/Eigen/Core>
+{% endblock %}
+{% block body %}
+class DataFile
+{
+	public:
+		typedef boost::signals2::signal<void()> SIG;
+
+		DataFile(std::string filename);
+		~DataFile();
+		
+		void			pushd(
+				unsigned int col,
+				double d);
+		void			pushv(
+				unsigned int col,
+				Eigen::VectorXd d,
+				unsigned int col2);
+
+		void			write();
+
+		FILE *			_M_fp;
+		SIG			_M_sig;
+		std::string		_M_filename;
+		unsigned int		_M_gate;
+		std::vector<double>	_M_buf;
+};
+{% endblock %}
