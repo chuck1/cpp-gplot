@@ -12,14 +12,17 @@ class GPlot
 	public:
 		GPlot();
 		~GPlot();
-		void		refresh();
+		void			refresh();
+		void			connect(
+				std::shared_ptr<gplot::plot::Plot>
+				);
 		template<typename... Args> void	print(Args... args)
 		{
 			fprintf(_M_fp, args...);
 		}
 		
-		unsigned int	_M_flags;
-		FILE *		_M_fp;
+		unsigned int		_M_flags;
+		FILE *			_M_fp;
 		std::vector<std::shared_ptr<gplot::plot::Plot>>	_M_plots;
 };
 {% endblock %}

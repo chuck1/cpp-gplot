@@ -1,4 +1,5 @@
 #include <iostream>
+#include <gplot/vector/Vector.hpp>
 #include <gplot/datafile/DataFile.hpp>
 
 typedef gplot::datafile::DataFile THIS;
@@ -71,6 +72,27 @@ void			THIS::write()
 	fflush(_M_fp);
 
 	_M_sig();
+}
+void			THIS::connectd(
+		gplot::vector::Vector<double> & v,
+		unsigned int col
+		)
+{
+	if((col + 1) > _M_buf.size())
+		_M_buf.resize(col + 1);
+
+	v._M_sig.connect(std::bind(&gplot::datafile::DataFile::pushd, this, col, std::placeholders::_1));
+}
+void			THIS::connectv(
+		gplot::vector::Vector<Eigen::VectorXd> & v,
+		unsigned int col,
+		unsigned int col1
+		)
+{
+	if((col + 1) > _M_buf.size())
+		_M_buf.resize(col + 1);
+
+	v._M_sig.connect(std::bind(&gplot::datafile::DataFile::pushv, this, col, std::placeholders::_1, col1));
 }
 
 

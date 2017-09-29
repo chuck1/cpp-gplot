@@ -37,5 +37,13 @@ void			THIS::refresh()
 	fprintf(_M_fp, "\n");
 	fflush(_M_fp);
 }
+void			THIS::connect(
+		std::shared_ptr<gplot::plot::Plot> p
+		)
+{
+	_M_plots.push_back(p);
+
+	p->_M_sig.connect(std::bind(&gplot::GPlot::refresh, this));
+}
 
 

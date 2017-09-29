@@ -2,6 +2,7 @@
 {% block header %}
 #include <boost/signals2.hpp>
 #include <eigen3/Eigen/Core>
+#include <gplot/decl.hpp>
 {% endblock %}
 {% block body %}
 class DataFile
@@ -12,6 +13,16 @@ class DataFile
 		DataFile(std::string filename);
 		~DataFile();
 		
+		void			connectd(
+				gplot::vector::Vector<double> & v,
+				unsigned int col
+				);
+		void			connectv(
+				gplot::vector::Vector<Eigen::VectorXd> & v,
+				unsigned int col,
+				unsigned int col1
+				);
+
 		void			pushd(
 				unsigned int col,
 				double d);
