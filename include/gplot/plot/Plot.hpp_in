@@ -34,5 +34,6 @@ class Plot:
 		unsigned int					_M_col_x;
 		unsigned int					_M_col_y;
 		std::string					_M_linetype;
+		std::string					_M_title;
 };
 {% endblock %}

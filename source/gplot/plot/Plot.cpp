@@ -21,11 +21,13 @@ THIS::Plot():
 void			THIS::plot(gplot::GPlot & gp)
 {
 	assert(_M_file);
-	gp.print("'%s' using %i:%i with %s",
+	gp.write("'%s' using %i:%i with %s",
 			_M_file->_M_filename.c_str(),
 			_M_col_x,
 			_M_col_y,
 			_M_linetype.c_str());
+	if(!_M_title.empty())
+		gp.write(" title '%s'", _M_title.c_str());
 }
 void			THIS::refresh()
 {

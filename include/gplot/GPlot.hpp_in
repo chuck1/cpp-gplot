@@ -12,13 +12,19 @@ class GPlot
 	public:
 		GPlot();
 		~GPlot();
+		void			open();
 		void			refresh();
 		void			connect(
 				std::shared_ptr<gplot::plot::Plot>
 				);
-		template<typename... Args> void	print(Args... args)
+		template<typename... Args> void	write(char const * f, Args... args)
 		{
-			fprintf(_M_fp, args...);
+			if(!_M_fp) open();
+			
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+			fprintf(_M_fp, f, args...);
+#pragma GCC diagnostic pop
 		}
 		
 		unsigned int		_M_flags;

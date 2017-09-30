@@ -10,11 +10,14 @@ int main(int ac, char ** av)
 	gplot::vector::Vector<Eigen::VectorXd> v2;
 	
 	// datafile
-	auto df = std::make_shared<gplot::datafile::DataFile>("build/test.bin");
+	std::shared_ptr<gplot::datafile::DataFile> df1(new gplot::datafile::DataFile("build/test1.bin"));
+	std::shared_ptr<gplot::datafile::DataFile> df2(new gplot::datafile::DataFile("build/test2.bin"));
 	
-	df->connectd(v1, 0);
-	df->connectv(v2, 1, 0);
-	df->connectv(v2, 2, 1);
+	df1->connectd(v1, 0);
+	df1->connectv(v2, 1, 0);
+	df1->connectv(v2, 2, 1);
+	
+	df2->connectv2(v2, 2);
 
 	// plots	
 	std::shared_ptr<gplot::plot::Plot> p1(new gplot::plot::Plot);
@@ -24,9 +27,9 @@ int main(int ac, char ** av)
 	//df._M_sig.connect(std::bind(&gplot::plot::Plot::refresh, p1.get()));
 	//df._M_sig.connect(std::bind(&gplot::plot::Plot::refresh, p2.get()));
 	
-	p1->connect(df, 1, 2);
-	p2->connect(df, 1, 3);
-	p3->connect(df, 2, 3);
+	p1->connect(df1, 1, 2);
+	p2->connect(df1, 1, 3);
+	p3->connect(df2, 1, 2);
 	
 	// gplot
 	gplot::GPlot gp1;

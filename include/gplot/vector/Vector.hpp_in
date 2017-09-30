@@ -9,17 +9,26 @@ class Vector
 {
 	public:
 		typedef boost::signals2::signal<void(T const &)> SIG;
+		typedef std::vector<T> V;
 
-		void		push_back(T const & t)
+		void			push_back(T const & t)
 		{
-			v.push_back(t);
+			_M_v.push_back(t);
 			
 			_M_sig(t);
+		}
+		void			reserve(unsigned int sz)
+		{
+			_M_v.reserve(sz);
+		}
+		typename V::size_type	size()
+		{
+			return _M_v.size();
 		}
 
 		SIG		_M_sig;
 
 	private:
-		std::vector<T>	v;
+		V		_M_v;
 };
 {% endblock %}

@@ -23,7 +23,7 @@ void			THIS::pushd(
 	// slot already filled
 	assert((_M_gate & (1 << col))==0);
 
-	std::cout << "datafile pushd " << col << " " << d << std::endl;
+	//std::cout << "datafile pushd " << col << " " << d << std::endl;
 
 	_M_gate |= (1 << col);
 	
@@ -39,11 +39,26 @@ void			THIS::pushv(
 	// slot already filled
 	assert((_M_gate & (1 << col))==0);
 
-	std::cout << "datafile pushv " << col << " " << d[col2] << " " << col2 << std::endl;
+	//std::cout << "datafile pushv " << col << " " << d[col2] << " " << col2 << std::endl;
 
 	_M_gate |= (1 << col);
 	
 	_M_buf[col] = d[col2];
+
+	write();
+}
+void			THIS::pushv2(
+		Eigen::VectorXd d
+		)
+{
+	// slot already filled
+	assert(_M_gate == 0);
+
+	//std::cout << "datafile pushv2 " << std::endl;
+
+	_M_gate = (1 << d.size()) - 1;
+	
+	_M_buf = d;
 
 	write();
 }
@@ -55,7 +70,7 @@ void			THIS::write()
 
 	assert(_M_fp);
 
-	std::cout << "datafile write" << std::endl;
+	//std::cout << "datafile write" << std::endl;
 
 	bool first = true;
 	for(unsigned int i = 0; i < _M_buf.size(); ++i)
@@ -93,6 +108,15 @@ void			THIS::connectv(
 		_M_buf.resize(col + 1);
 
 	v._M_sig.connect(std::bind(&gplot::datafile::DataFile::pushv, this, col, std::placeholders::_1, col1));
+}
+void			THIS::connectv2(
+		gplot::vector::Vector<Eigen::VectorXd> & v,
+		unsigned int sz
+		)
+{
+	_M_buf.resize(sz);
+
+	v._M_sig.connect(std::bind(&gplot::datafile::DataFile::pushv2, this, std::placeholders::_1));
 }
 
 

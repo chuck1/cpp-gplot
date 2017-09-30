@@ -22,6 +22,10 @@ class DataFile
 				unsigned int col,
 				unsigned int col1
 				);
+		void			connectv2(
+				gplot::vector::Vector<Eigen::VectorXd> & v,
+				unsigned int sz
+				);
 
 		void			pushd(
 				unsigned int col,
@@ -30,6 +34,9 @@ class DataFile
 				unsigned int col,
 				Eigen::VectorXd d,
 				unsigned int col2);
+		void			pushv2(
+				Eigen::VectorXd d
+				);
 
 		void			write();
 
@@ -37,6 +44,6 @@ class DataFile
 		SIG			_M_sig;
 		std::string		_M_filename;
 		unsigned int		_M_gate;
-		std::vector<double>	_M_buf;
+		Eigen::VectorXd		_M_buf;
 };
 {% endblock %}

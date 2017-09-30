@@ -14,23 +14,24 @@ THIS::~GPlot()
 	if(_M_fp)
 		pclose(_M_fp);
 }
+void			THIS::open()
+{
+	_M_fp = popen("gnuplot", "w");
+}
 void			THIS::refresh()
 {
-	std::cout << "gplot refresh" << std::endl;
+	//std::cout << "gplot refresh" << std::endl;
 	
-	if(!_M_fp)
-		_M_fp = popen("gnuplot", "w");
-
 	bool first = true;
 	for(auto p : _M_plots)
 	{
 		if(first)
 		{
 			first = false;
-			fprintf(_M_fp, "plot ");
+			write("plot ");
 		}
 		else
-			fprintf(_M_fp, ",");
+			write(",");
 
 		p->plot(*this);
 	}
