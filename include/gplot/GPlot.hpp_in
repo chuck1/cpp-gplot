@@ -13,6 +13,7 @@ class GPlot
 		GPlot();
 		~GPlot();
 		void			open();
+		void			flush();
 		void			refresh();
 		void			connect(
 				std::shared_ptr<gplot::plot::Plot>

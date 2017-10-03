@@ -29,6 +29,10 @@ void			THIS::plot(gplot::GPlot & gp)
 	if(!_M_title.empty())
 		gp.write(" title '%s'", _M_title.c_str());
 }
+void			THIS::write_data(
+		gplot::GPlot & gp)
+{
+}
 void			THIS::refresh()
 {
 	_M_sig();

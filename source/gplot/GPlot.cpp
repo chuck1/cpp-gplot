@@ -18,6 +18,10 @@ void			THIS::open()
 {
 	_M_fp = popen("gnuplot", "w");
 }
+void			THIS::flush()
+{
+	fflush(_M_fp);
+}
 void			THIS::refresh()
 {
 	//std::cout << "gplot refresh" << std::endl;
@@ -36,6 +40,13 @@ void			THIS::refresh()
 		p->plot(*this);
 	}
 	fprintf(_M_fp, "\n");
+
+	// for inline data
+	for(auto p : _M_plots)
+	{
+		p->write_data(*this);
+	}
+
 	fflush(_M_fp);
 }
 void			THIS::connect(

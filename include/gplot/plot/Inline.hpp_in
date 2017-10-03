@@ -1,0 +1,19 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <eigen3/Eigen/Core>
+#include <gplot/plot/Plot.hpp>
+{% endblock %}
+{% block body %}
+class Inline:
+	virtual public gplot::plot::Plot
+{
+	public:
+		Inline();
+		virtual void				plot(
+				gplot::GPlot & gp);
+		virtual void				write_data(
+				gplot::GPlot & gp);
+
+		std::vector<Eigen::Vector2d>		_M_data;
+};
+{% endblock %}

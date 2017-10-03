@@ -12,7 +12,9 @@ class Plot:
 		typedef boost::signals2::signal<void()> SIG;
 
 		Plot();
-		void						plot(
+		virtual void				plot(
+				gplot::GPlot & gp);
+		virtual void				write_data(
 				gplot::GPlot & gp);
 		/**
 		 * This function is connected to the refresh signal of the x and y datastreams.
@@ -22,8 +24,8 @@ class Plot:
 		 * Then it will trigger its refresh signal to which the GPlot object will
 		 * be connect.
 		 */
-		void						refresh();
-		void						connect(
+		void					refresh();
+		void					connect(
 				std::shared_ptr<gplot::datafile::DataFile>,
 				unsigned int,
 				unsigned int
