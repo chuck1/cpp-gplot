@@ -10,8 +10,8 @@ int main(int ac, char ** av)
 	gplot::vector::Vector<Eigen::VectorXd> v2;
 	
 	// datafile
-	std::shared_ptr<gplot::datafile::DataFile> df1(new gplot::datafile::DataFile("build/test1.bin"));
-	std::shared_ptr<gplot::datafile::DataFile> df2(new gplot::datafile::DataFile("build/test2.bin"));
+	std::shared_ptr<gplot::datafile::DataFile2D> df1(new gplot::datafile::DataFile2D("build/test1.bin"));
+	std::shared_ptr<gplot::datafile::DataFile2D> df2(new gplot::datafile::DataFile2D("build/test2.bin"));
 	
 	df1->connectd(v1, 0);
 	df1->connectv(v2, 1, 0);

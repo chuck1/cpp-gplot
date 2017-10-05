@@ -1,0 +1,42 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <gplot/datafile/DataFile.hpp>
+{% endblock %}
+{% block body %}
+class DataFile2D: virtual public DataFile
+{
+	public:
+		DataFile2D(std::string filename);
+		~DataFile2D();
+		
+		void			connectd(
+				gplot::vector::Vector<double> & v,
+				unsigned int col
+				);
+		void			connectv(
+				gplot::vector::Vector<Eigen::VectorXd> & v,
+				unsigned int col,
+				unsigned int col1
+				);
+		void			connectv2(
+				gplot::vector::Vector<Eigen::VectorXd> & v,
+				unsigned int sz
+				);
+
+		void			pushd(
+				unsigned int col,
+				double d);
+		void			pushv(
+				unsigned int col,
+				Eigen::VectorXd d,
+				unsigned int col2);
+		void			pushv2(
+				Eigen::VectorXd d
+				);
+
+		void			write();
+
+		unsigned int		_M_gate;
+		Eigen::VectorXd		_M_buf;
+};
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "CHeader.hpp" %}
+{% block header %}
+#include <eigen3/Eigen/Core>
+#include <gplot/plot/Plot.hpp>
+{% endblock %}
+{% block body %}
+class Binary:
+	virtual public gplot::plot::Plot
+{
+	public:
+		Binary();
+		virtual void				plot(
+				gplot::GPlot & gp);
+
+		unsigned int				_M_size_x;
+		unsigned int				_M_size_y;
+};
+{% endblock %}

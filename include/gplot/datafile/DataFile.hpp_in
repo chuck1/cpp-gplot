@@ -12,38 +12,10 @@ class DataFile
 
 		DataFile(std::string filename);
 		~DataFile();
+		void			write(void*, size_t);
 		
-		void			connectd(
-				gplot::vector::Vector<double> & v,
-				unsigned int col
-				);
-		void			connectv(
-				gplot::vector::Vector<Eigen::VectorXd> & v,
-				unsigned int col,
-				unsigned int col1
-				);
-		void			connectv2(
-				gplot::vector::Vector<Eigen::VectorXd> & v,
-				unsigned int sz
-				);
-
-		void			pushd(
-				unsigned int col,
-				double d);
-		void			pushv(
-				unsigned int col,
-				Eigen::VectorXd d,
-				unsigned int col2);
-		void			pushv2(
-				Eigen::VectorXd d
-				);
-
-		void			write();
-
 		FILE *			_M_fp;
 		SIG			_M_sig;
 		std::string		_M_filename;
-		unsigned int		_M_gate;
-		Eigen::VectorXd		_M_buf;
 };
 {% endblock %}
