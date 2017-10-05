@@ -106,6 +106,11 @@ void			do_plot(
 }
 int main(int ac, char ** av)
 {
+	if(ac != 4)
+	{
+		printf("usage: %s sx sy nframes\n", av[0]);
+		return 1;
+	}
 	//gplot::vector::Vector<FLOAT> v1;
 	//gplot::vector::Vector<Eigen::VectorXd> v2;
 	
