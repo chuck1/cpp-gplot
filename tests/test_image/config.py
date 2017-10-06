@@ -6,7 +6,9 @@ e._test = True
 
 e.add_dep('gplot')
 
-#e.args.append('-lglpk')
+e.args.args.append('-lboost_program_options')
+
+#e.args.args.append('-lboost_multiprecision')
 
 self.parts.append(e)
 
