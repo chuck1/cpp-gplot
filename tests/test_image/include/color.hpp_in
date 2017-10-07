@@ -1,0 +1,150 @@
+{{ include_block_open }}
+#include <cassert>
+#include <unistd.h>
+#include <iostream>
+#include <eigen3/Eigen/Core>
+#include <gplot/gplot.hpp>
+#include <boost/program_options.hpp>
+#include <boost/multiprecision/cpp_bin_float.hpp>
+#include <signal.h>
+
+template<typename T>
+class ColorHSV
+{
+	public:
+		ColorHSV<T>(
+				T nh,
+				T ns,
+				T nv):
+			h(nh),
+			s(ns),
+			v(nv)
+	{
+	}
+		T h, s, v;
+};
+template<typename T>
+class ColorFRGB
+{
+	public:
+		ColorFRGB<T>():
+			r(0),
+			g(0),
+			b(0) {}
+		ColorFRGB<T>(
+				T nr,
+				T ng,
+				T nb):
+			r(nr),
+			g(ng),
+			b(nb) {}
+		ColorFRGB<T>(ColorHSV<T> const & hsv)
+		{
+			r = 0;
+			g = 0;
+			b = 0;
+
+			T c = hsv.s * hsv.v;
+			T h = hsv.h * 6.;
+			int h1 = (int)h;
+			int h2 = h1 % 2;
+			T h3 = h - (h1 - h2);
+
+			//T x1 = (double)std::abs(h2 - 1);
+			T x1 = abs(h3 - (T)1);
+
+			T x2 = 1. - x1;
+			T x = c * x2;
+
+			if(h < 1)
+			{
+				r = c;
+				g = x;
+			}
+			else if(h < 2)
+			{
+				r = x;
+				g = c;
+			}
+			else if(h < 3)
+			{
+				g = c;
+				b = x;
+			}
+			else if(h < 4)
+			{
+				g = x;
+				b = c;
+			}
+			else if(h < 5)
+			{
+				r = x;
+				b = c;
+			}
+			else
+			{
+				r = c;
+				b = x;
+			}
+			r += hsv.v - c;
+			g += hsv.v - c;
+			b += hsv.v - c;
+		}
+
+		ColorFRGB<T> &		operator+=(ColorFRGB<T> const & f)
+		{
+			r += f.r;
+			g += f.g;
+			b += f.b;
+			return *this;
+		}
+
+		T r, g, b;
+};
+class ColorCRGB
+{
+	public:
+		ColorCRGB();
+		ColorCRGB(unsigned char,unsigned char,unsigned char);
+		template<typename T> static ColorCRGB	convert(ColorFRGB<T> const & f)
+		{
+			ColorCRGB c;
+			c.r = (unsigned char)(255 * f.r);
+			c.g = (unsigned char)(255 * f.g);
+			c.b = (unsigned char)(255 * f.b);
+			return c;
+		}
+		template<typename T> static ColorCRGB	convert(ColorHSV<T> const & hsv)
+		{
+			ColorFRGB<T> f(hsv);
+			return ColorCRGB::convert(f);
+		}
+		unsigned char r,g,b;
+};
+ColorCRGB::ColorCRGB():
+	r(0),
+	g(0),
+	b(0)
+{
+}
+ColorCRGB::ColorCRGB(
+		unsigned char nr, 
+		unsigned char ng, 
+		unsigned char nb):
+	r(nr),
+	g(ng),
+	b(nb)
+{
+}
+
+template<typename T>
+ColorFRGB<T> operator/(ColorFRGB<T> const & c, T f)
+{
+	return ColorFRGB<T>(
+			c.r / f,
+			c.g / f,
+			c.b / f);
+}
+
+{{ include_block_close }}
+

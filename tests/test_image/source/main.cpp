@@ -1,29 +1,90 @@
-#include <cassert>
+#include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 #include <iostream>
+#include <fstream>
+#include <cassert>
+#include <ncurses.h>
+
 #include <eigen3/Eigen/Core>
 #include <gplot/gplot.hpp>
 #include <boost/program_options.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 
+#include <color.hpp>
+
+class Interupt
+{};
+
 class Simulation
 {
 	public:
-		virtual void	read(std::string) = 0;
-		virtual void	write(std::string) = 0;
+		Simulation():
+			_M_current_frame(0) {}
+
+		virtual void	read(std::ifstream &) = 0;
+		virtual void	write(std::ofstream &) = 0;
+
+		virtual int	size_frames() = 0;
+		virtual void	resize_frames(int) = 0;
+
+		virtual void	calculate(int frame) = 0;
+
+		void		write()
+		{
+			assert(!_M_filename.empty());
+			write(_M_filename);
+		}
+		void		write(std::string f)
+		{
+			std::ofstream ofs(f, std::ios::binary);
+			write(ofs);
+		}
+		void		read(std::string f)
+		{
+			_M_filename = f;
+			std::ifstream ifs(f, std::ios::binary);
+			read(ifs);
+		}
+		void		sigint()
+		{
+			throw Interupt();
+		}
 		void		run(int frames)
 		{
+			resize_frames(size_frames() + frames);
 
-			for(int i = 0; i < frames; ++i)
+			try
 			{
-				calculate(_M_current_frame);
-				++_M_current_frame;
-			}
-		}
-		virtual void	calculate(int) = 0;
+				for(int i = 0; i < frames; ++i)
+				{
+					std::cout << "frame " << _M_current_frame << std::endl;
 
-		int		_M_current_frame;
+					calculate(_M_current_frame);
+
+					++_M_current_frame;
+				}
+
+			}
+			catch(Interupt &)
+			{
+				std::cout << "interupt caught" << std::endl;
+			}
+
+			write();
+		}
+
+		int			_M_current_frame;
+		std::string		_M_filename;
+		static Simulation *	_S_simulation;
 };
+Simulation * Simulation::_S_simulation;
+
+void intHandler(int)
+{
+	Simulation::_S_simulation->sigint();
+}
+
 
 //typedef double FLOAT;
 typedef boost::multiprecision::cpp_bin_float_50 FLOAT;
@@ -31,149 +92,15 @@ typedef boost::multiprecision::cpp_bin_float_50 FLOAT;
 typedef std::complex<FLOAT> C;
 typedef Eigen::Matrix<FLOAT,2,1> Vector2F;
 
-class ColorHSV
+/*
+ColorFRGB operator/(ColorFRGB const & c, FLOAT f)
 {
-	public:
-		ColorHSV(
-				FLOAT,
-				FLOAT,
-				FLOAT);
-		FLOAT h, s, v;
-};
-ColorHSV::ColorHSV(
-		FLOAT nh,
-		FLOAT ns,
-		FLOAT nv):
-	h(nh),
-	s(ns),
-	v(nv)
-{
+	return ColorFRGB(
+			c.r / f,
+			c.g / f,
+			c.b / f);
 }
-class ColorFRGB
-{
-	public:
-		ColorFRGB();
-		ColorFRGB(
-				FLOAT,
-				FLOAT,
-				FLOAT);
-		ColorFRGB(
-				ColorHSV const &);
-		ColorFRGB &	operator+=(ColorFRGB const & f);
-		FLOAT r, g, b;
-};
-class ColorCRGB
-{
-	public:
-		ColorCRGB();
-		ColorCRGB(unsigned char,unsigned char,unsigned char);
-		ColorCRGB(ColorFRGB const &);
-		ColorCRGB(ColorHSV const &);
-		unsigned char r,g,b;
-};
-ColorFRGB::ColorFRGB():
-	r(0),
-	g(0),
-	b(0)
-{}
-ColorFRGB::ColorFRGB(
-		FLOAT nr,
-		FLOAT ng,
-		FLOAT nb):
-	r(nr),
-	g(ng),
-	b(nb)
-{
-}
-ColorCRGB::ColorCRGB():
-	r(0),
-	g(0),
-	b(0)
-{
-}
-ColorFRGB &	ColorFRGB::operator+=(ColorFRGB const & f)
-{
-	r += f.r;
-	g += f.g;
-	b += f.b;
-	return *this;
-}
-ColorCRGB::ColorCRGB(
-		unsigned char nr, 
-		unsigned char ng, 
-		unsigned char nb):
-	r(nr),
-	g(ng),
-	b(nb)
-{
-}
-ColorFRGB::ColorFRGB(ColorHSV const & hsv)
-{
-	r = 0;
-	g = 0;
-	b = 0;
-
-	FLOAT c = hsv.s * hsv.v;
-	FLOAT h = hsv.h * 6.;
-	int h1 = (int)h;
-	int h2 = h1 % 2;
-	FLOAT h3 = h - (h1 - h2);
-	
-	//FLOAT x1 = (double)std::abs(h2 - 1);
-	FLOAT x1 = abs(h3 - (FLOAT)1);
-
-	FLOAT x2 = 1. - x1;
-	FLOAT x = c * x2;
-
-	if(h < 1)
-	{
-		r = c;
-		g = x;
-	}
-	else if(h < 2)
-	{
-		r = x;
-		g = c;
-	}
-	else if(h < 3)
-	{
-		g = c;
-		b = x;
-	}
-	else if(h < 4)
-	{
-		g = x;
-		b = c;
-	}
-	else if(h < 5)
-	{
-		r = x;
-		b = c;
-	}
-	else
-	{
-		r = c;
-		b = x;
-	}
-	
-	r += hsv.v - c;
-	g += hsv.v - c;
-	b += hsv.v - c;
-}
-ColorCRGB::ColorCRGB(ColorHSV const & hsv)
-{
-	ColorFRGB f(hsv);
-	r = (unsigned char)(255 * f.r);
-	g = (unsigned char)(255 * f.g);
-	b = (unsigned char)(255 * f.b);
-}
-ColorCRGB::ColorCRGB(ColorFRGB const & f)
-{
-	r = (unsigned char)(255 * f.r);
-	g = (unsigned char)(255 * f.g);
-	b = (unsigned char)(255 * f.b);
-}
-
+*/
 
 FLOAT			julia_distance(C z, C c)
 {
@@ -181,7 +108,7 @@ FLOAT			julia_distance(C z, C c)
 	FLOAT m;
 
 	C dz(1,0);
-	
+
 	for(unsigned int i = 0; i < 1024; ++i)
 	{
 		dz = z * dz * (FLOAT)2 + (FLOAT)1;
@@ -196,7 +123,7 @@ FLOAT			julia_distance(C z, C c)
 	}
 	return 0;
 }
-template<typename T>
+	template<typename T>
 T			map(
 		T x,
 		T x0,
@@ -216,9 +143,69 @@ template<typename T> using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dyn
 template<typename T> using VectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
 
-class CD
+class CD: public Simulation
 {
 	public:
+		using Simulation::read;
+		virtual void			read(std::ifstream & ifs)
+		{
+			ifs.read((char*)&_M_current_frame, sizeof(int));
+			ifs.read((char*)&_M_c, sizeof(C));
+			ifs.read((char*)&_M_sx, sizeof(int));
+			ifs.read((char*)&_M_sy, sizeof(int));
+			ifs.read((char*)&_M_center, sizeof(Vector2F));
+			ifs.read((char*)&_M_wx, sizeof(FLOAT));
+			
+			unsigned int s;
+			ifs.read((char*)&s, sizeof(unsigned int));
+			
+			_M_frames.resize(s);
+			
+			for(unsigned int i = 0; i < s; ++i)
+			{
+				_M_frames[i].resize(_M_sx, _M_sy);
+				ifs.read((char*)&_M_frames[i](0,0), sizeof(ColorCRGB) * _M_sx * _M_sy);
+			}
+
+			std::cout << "read" << std::endl;
+			info();
+		}
+		virtual void			write(std::ofstream & ofs)
+		{
+			ofs.write((char*)&_M_current_frame, sizeof(int));
+			ofs.write((char*)&_M_c, sizeof(C));
+			ofs.write((char*)&_M_sx, sizeof(int));
+			ofs.write((char*)&_M_sy, sizeof(int));
+			ofs.write((char*)&_M_center, sizeof(Vector2F));
+			ofs.write((char*)&_M_wx, sizeof(FLOAT));
+			
+			unsigned int s = _M_frames.size();
+			ofs.write((char*)&s, sizeof(unsigned int));
+			
+			for(unsigned int i = 0; i < s; ++i)
+			{
+				ofs.write((char*)&_M_frames[i](0,0), sizeof(ColorCRGB) * _M_sx * _M_sy);
+			}
+		}
+		virtual int			size_frames()
+		{
+			return _M_frames.size();
+		}
+		virtual void			resize_frames(int s)
+		{
+			_M_frames.resize(s);
+		}
+
+		virtual void			calculate(int frame);
+
+		void				info()
+		{
+			std::cout << "sx            " << _M_sx << std::endl;
+			std::cout << "sy            " << _M_sy << std::endl;
+			std::cout << "frames size   " << _M_frames.size() << std::endl;
+			std::cout << "current frame " << _M_current_frame << std::endl;
+		}
+
 		void				resize(int, int);
 		void				calculate();
 		void				filter();
@@ -226,41 +213,44 @@ class CD
 		void				convert_d_to_c1();
 		void				convert_c1_to_c2();
 
-		ColorFRGB			color_func_1(FLOAT d)
+		ColorFRGB<FLOAT>		color_func_1(FLOAT d)
 		{
 			FLOAT logd = log(d);
 			FLOAT c = map<FLOAT>(logd, -50, 0, 0, 1);
-			return ColorFRGB(c,c,c);
+			return ColorFRGB<FLOAT>(c,c,c);
 		}
-		ColorFRGB			color_func_2(FLOAT d)
+		ColorFRGB<FLOAT>		color_func_2(FLOAT d)
 		{
-			if(d==0) return ColorFRGB();
+			if(d==0) return ColorFRGB<FLOAT>();
 			FLOAT logd = log(d);
-			
+
 			FLOAT x0 = logd_min;
-			
+
 			FLOAT hue = map<FLOAT>(logd, x0, 0, 0, 2./3.);
-			
-			ColorHSV hsv(hue, 1, 1);
-			return ColorFRGB(hsv);
+
+			ColorHSV<FLOAT> hsv(hue, 1, 1);
+			return ColorFRGB<FLOAT>(hsv);
 		}
 
 
-		int				_M_sx;
-		int				_M_sy;
-		Vector2F			_M_center;
-		FLOAT				_M_wx;
-		
-		C				_M_c;
-		MatrixX<FLOAT>			_M_d;
-		MatrixX<ColorFRGB>		_M_c1;
-		MatrixX<ColorCRGB>		_M_c2;
+		C					_M_c;
+		int					_M_sx;
+		int					_M_sy;
+		Vector2F				_M_center;
+		FLOAT					_M_wx;
 
-		FLOAT				logd_min;
-		FLOAT				logd_max;
-		Vector2F			logd_min_coor;
+		std::vector<MatrixX<ColorCRGB>>		_M_frames;
 
-		std::function<ColorFRGB(FLOAT d)>	_M_color_func;
+
+		MatrixX<FLOAT>				_M_d;
+		MatrixX<ColorFRGB<FLOAT>>		_M_c1;
+		MatrixX<ColorCRGB>			_M_c2;
+
+		FLOAT						logd_min;
+		FLOAT						logd_max;
+		Vector2F					logd_min_coor;
+
+		std::function<ColorFRGB<FLOAT>(FLOAT d)>	_M_color_func;
 
 };
 void				CD::resize(int sx, int sy)
@@ -271,13 +261,7 @@ void				CD::resize(int sx, int sy)
 	_M_c1.resize(sx, sy);
 	_M_c2.resize(sx, sy);
 }
-ColorFRGB operator/(ColorFRGB const & c, FLOAT f)
-{
-	return ColorFRGB(
-			c.r / f,
-			c.g / f,
-			c.b / f);
-}
+
 void				CD::filter()
 {
 	int s = 1;
@@ -286,7 +270,7 @@ void				CD::filter()
 		for(int j = 0; j < _M_sy; ++j)
 		{
 			FLOAT d = 0;
-			ColorFRGB n;
+			ColorFRGB<FLOAT> n;
 			n += _M_c1(i,j);
 			d += 1;
 			for(int i1 = i - s; i1 < (i + s + 1); ++i1)
@@ -308,7 +292,7 @@ void				CD::filter()
 	}
 
 }
-void				CD::calculate()
+void				CD::calculate(int framei)
 {
 	logd_min = std::numeric_limits<FLOAT>::max();
 	logd_max = std::numeric_limits<FLOAT>::min();
@@ -322,14 +306,17 @@ void				CD::calculate()
 	FLOAT dx = _M_wx / (FLOAT)(_M_sx - 1);
 	FLOAT dy = wy / (FLOAT)(_M_sy - 1);
 
+	printf("\n");
 	for(int i = 0; i < _M_sx; ++i)
 	{
 		x = x0 + (FLOAT)i * dx;
 
-		if(0) printf("i = %4u\n", i);
 
 		for(int j = 0; j < _M_sy; ++j)
 		{
+			mvprintw(0, 0, "i = %6u j = %6u %3.0f%%", i, j, 100.f*(float)(i*_M_sx+j)/(float)(_M_sx*_M_sy));
+			refresh();
+
 			y = y0 + (FLOAT)j * dy;
 
 			C z(x, y);
@@ -350,18 +337,31 @@ void				CD::calculate()
 
 			_M_d(i, j) = d;
 		}
+
 	}
+	//printf("\n");
 
 
+	std::cout << "center        " << std::endl;
+	printf("    %+32.24e\n", (double)_M_center[0]);
+	printf("    %+32.24e\n", (double)_M_center[1]);
 	std::cout << "wx            " << _M_wx << std::endl;
 	std::cout << "logd_min      " << logd_min << std::endl;
 	std::cout << "logd_max      " << logd_max << std::endl;
-	std::cout << "logd_min_coor " << logd_min_coor << std::endl;
+	std::cout << "logd_min_coor " << std::endl;
+	printf("    %+32.24e\n", (double)logd_min_coor[0]);
+	printf("    %+32.24e\n", (double)logd_min_coor[1]);
 
 	filter();
 
 	convert_d_to_c1();
 	convert_c1_to_c2();
+
+	_M_frames[framei] = _M_c2;
+
+	// prepare for next frame
+	_M_center = logd_min_coor;
+	_M_wx *= 0.2;
 }
 void			CD::convert_d_to_c1()
 {
@@ -384,7 +384,7 @@ void			CD::convert_c1_to_c2()
 	{
 		for(int j = 0; j < _M_sy; ++j)
 		{
-			_M_c2(i, j) = ColorCRGB(_M_c1(i, j));
+			_M_c2(i, j) = ColorCRGB::convert(_M_c1(i, j));
 		}
 	}
 }
@@ -399,17 +399,25 @@ void			do_plot(
 
 	df->write(&m(0, 0), sx * sy * sizeof(ColorCRGB));
 }
+inline bool exists (const std::string& name)
+{
+	struct stat buffer;   
+	return (stat (name.c_str(), &buffer) == 0); 
+}
 namespace po = boost::program_options;
 int main(int ac, char ** av)
 {
+	initscr();
+
+	signal(SIGINT, intHandler);
+
 	std::cout << "float                                     " << sizeof(float) << std::endl;
 	std::cout << "double                                    " << sizeof(double) << std::endl;
 	std::cout << "boost::multiprecision::cpp_bin_float_50   " << sizeof(boost::multiprecision::cpp_bin_float_50) << std::endl;
-	
 
 	CD cd;
-	int sx = 100;
-	int sy = 100;
+	Simulation::_S_simulation = &cd;
+	cd._M_filename = "build/cd_test.bin";
 	int nframes = 1;
 
 	cd._M_color_func = std::bind(&CD::color_func_2, &cd, std::placeholders::_1);
@@ -425,11 +433,12 @@ int main(int ac, char ** av)
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help", "produce help message")
+		("file", po::value<std::string>(), "file")
 		("f", po::value<int>(&nframes)->default_value(1), "nframes")
 		("x", po::value<FLOAT>(&cd._M_center[0]), "x")
 		("y", po::value<FLOAT>(&cd._M_center[1]), "y")
-		("sx", po::value<int>(&sx)->default_value(100), "sx")
-		("sy", po::value<int>(&sy)->default_value(100), "sy")
+		("sx", po::value<int>(&cd._M_sx)->default_value(100), "sx")
+		("sy", po::value<int>(&cd._M_sy)->default_value(100), "sy")
 		("wx", po::value<FLOAT>(&cd._M_wx)->default_value(2), "wx");
 
 	po::variables_map vm;
@@ -441,15 +450,18 @@ int main(int ac, char ** av)
 		return 1;
 	}
 
-	if (vm.count("compression")) {
-		std::cout << "Compression level was set to " 
-			<< vm["compression"].as<int>() << ".\n";
-	} else {
-		std::cout << "Compression level was not set.\n";
+
+	if(vm.count("file"))
+	{
+		std::string f = vm["file"].as<std::string>();
+		if(exists(f))
+			cd.read(f);
+		else
+			cd._M_filename = f;
 	}
 
+	cd.resize(cd._M_sx, cd._M_sy);
 
-	cd.resize(sx, sy);
 
 	// datafile
 	std::shared_ptr<gplot::datafile::DataFile> df(new gplot::datafile::DataFile("build/test1.bin"));
@@ -458,8 +470,8 @@ int main(int ac, char ** av)
 	// plots	
 	std::shared_ptr<gplot::plot::Binary> plot(new gplot::plot::Binary);
 	plot->_M_linetype = "rgbimage";
-	plot->_M_size_x = sx;
-	plot->_M_size_y = sy;
+	plot->_M_size_x = cd._M_sx;
+	plot->_M_size_y = cd._M_sy;
 
 	plot->connect(df, 1, 2);
 
@@ -467,34 +479,22 @@ int main(int ac, char ** av)
 	gplot::GPlot gp;
 	gp.connect(plot);
 
-
-	std::vector<MatrixX<ColorCRGB>> frames;
-	frames.resize(nframes);
-
-	int s = nframes * sx * sy * sizeof(ColorCRGB);
+	int s = nframes * cd._M_sx * cd._M_sy * sizeof(ColorCRGB);
 	printf("size: %u mb\n", s/1024/1024);
 
+	cd.run(nframes);
 
-	for(int i = 0; i < nframes; ++i)
-	{
-		printf("frame %4u\n", i);
-
-		cd.calculate();
-
-		frames[i] = cd._M_c2;
-
-		cd._M_center = cd.logd_min_coor;
-		cd._M_wx *= 0.2;
-	}
+	std::cout << "plot" << std::endl;
+	cd.info();
 
 	while(true)
 	{
-		for(int i = 0; i < nframes; ++i)
+		for(int i = 0; i < cd._M_current_frame; ++i)
 		{
 			char buf[100];
-			sprintf(buf, "frame %4u/%4u", i, nframes);
+			sprintf(buf, "frame %4u/%4u", i, cd._M_current_frame);
 			plot->_M_title = buf;
-			do_plot(sx, sy, df, frames[i], i);
+			do_plot(cd._M_sx, cd._M_sy, df, cd._M_frames[i], i);
 			getchar();
 			//usleep(100000);
 		}
@@ -503,5 +503,7 @@ int main(int ac, char ** av)
 	//gp.refresh();
 
 	if(ac > 1) getchar();
+
+	endwin();
 }
 
