@@ -29,6 +29,10 @@ class Vector
 		{
 			return _M_v.size();
 		}
+		T &			back()
+		{
+			return _M_v.back();
+		}
 
 		SIG		_M_sig;
 
