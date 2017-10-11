@@ -17,6 +17,10 @@ class Vector
 			
 			_M_sig(t);
 		}
+		T &			operator[](int i)
+		{
+			return _M_v[i];
+		}
 		void			reserve(unsigned int sz)
 		{
 			_M_v.reserve(sz);

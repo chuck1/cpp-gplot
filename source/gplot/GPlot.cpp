@@ -16,7 +16,7 @@ THIS::~GPlot()
 }
 void			THIS::open()
 {
-	_M_fp = popen("gnuplot", "w");
+	_M_fp = popen("gnuplot -p", "w");
 }
 void			THIS::flush()
 {
