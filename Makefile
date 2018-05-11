@@ -1,5 +1,5 @@
 all:
-	pbs2 make config.py
+	pbs make config.py
 
 clean:
 	rm -rf build

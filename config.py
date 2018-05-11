@@ -1,7 +1,7 @@
 import os
-import pbs2
+import pbs
 
-l = pbs2.Library(self, 'gplot', __file__)
+l = pbs.Library(self, 'gplot', __file__)
 
 l.doc_out_dir = "/media/sf_P_DRIVE/html/gplot"
 
