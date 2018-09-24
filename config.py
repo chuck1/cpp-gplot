@@ -3,7 +3,7 @@ import pbs
 
 l = pbs.Library(self, 'gplot', __file__)
 
-l.doc_out_dir = "/media/sf_P_DRIVE/html/gplot"
+l.doc_out_dir = "/home/charles/WindowsShare/html/gplot"
 
 self.parts.append(l)
 
